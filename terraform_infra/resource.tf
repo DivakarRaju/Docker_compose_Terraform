@@ -4,30 +4,30 @@ data "archive_file" "ping_pong_file_archive" {
   source_file = "../function/sample.py"
   output_path = "../function/sample.zip"
 }
+resource "aws_iam_role" "iam_for_lambda_tf" {
+  name = "iam_for_lambda_tf"
 
-data "aws_iam_policy_document" "policy" {
-  statement {
-    sid    = ""
-    effect = "Allow"
-
-    principals {
-      identifiers = ["lambda.amazonaws.com"]
-      type        = "Service"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
     }
-
-    actions = ["sts:AssumeRole"]
-  }
+  ]
 }
-
-resource "aws_iam_role" "iam_for_lambda" {
-  name               = "iam_for_lambda"
-  assume_role_policy = data.aws_iam_policy_document.policy.json
+EOF
 }
 
 resource "aws_lambda_function" "ping_pong" {
   filename      = "../function/sample.zip"
   function_name = "ping_pong"
-  role          = aws_iam_role.iam_for_lambda.arn
+  role          = aws_iam_role.iam_for_lambda_tf.arn
   handler       = "sample.ping_pong"
 
   runtime = "python3.8"

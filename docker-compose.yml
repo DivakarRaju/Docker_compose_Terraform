@@ -4,15 +4,18 @@ services:
     
     localstack:
         image: localstack/localstack:latest
-        ports: 
-            - '4566:4566'
         environment: 
-            - SERVICES=lambda,s3
+            - SERVICES=lambda,s3,iam
             - DEFAULT_REGION=us-east-1
             - EDGE_PORT=4566
-    
+        ports: 
+            - "4566:4566"
+
     terraform:
-        image: docker pull hashicorp/terraform:1.0.0
+        image: hashicorp/terraform:1.0.0
         volumes: 
             - .:/infra
         working_dir: /infra
+        environment: 
+            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
