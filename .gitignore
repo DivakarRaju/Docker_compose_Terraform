@@ -1,0 +1,6 @@
+**/.terraform/*
+terraform_infra/.terraform.lock.hcl
+
+.DS_Store
+*/terraform.tfstate*
+function/sample.zip

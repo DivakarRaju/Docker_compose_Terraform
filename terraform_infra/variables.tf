@@ -1,11 +1,11 @@
 variable "profile" {
-    type = string
-    default = "divakarpersonal"
-  
+  type    = string
+  default = "divakarpersonal"
+
 }
 
 variable "aws_region" {
-    type = string
-    default = "us-east-1"
-  
+  type    = string
+  default = "us-east-1"
+
 }
