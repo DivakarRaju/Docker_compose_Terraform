@@ -1,15 +1,13 @@
-resource "aws_s3_bucket" "zip_file_bucket" {
-  bucket = "sample-filebucket-terraform"
-  #   acl    = "public-read-write"
-#   provider = aws.local
-}
-
 data "archive_file" "ping_pong_file_archive" {
   type        = "zip"
   source_file = "../function/sample.py"
   output_path = "../function/sample.zip"
 }
 
+resource "aws_s3_bucket" "zip_file_bucket" {
+  bucket = "sample-filebucket-terraform"
+    acl    = "private"
+}
 resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.zip_file_bucket.id
   key    = "sample.zip"
