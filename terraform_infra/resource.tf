@@ -1,13 +1,18 @@
+# zip the python file
+
 data "archive_file" "ping_pong_file_archive" {
   type        = "zip"
   source_file = "../function/sample.py"
   output_path = "../function/sample.zip"
 }
 
+#Creating a s3 bucket
 resource "aws_s3_bucket" "zip_file_bucket" {
   bucket = "sample-filebucket-terraform"
-    acl    = "private"
+  acl    = "private"
 }
+
+# push the zip file to s3
 resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.zip_file_bucket.id
   key    = "sample.zip"
@@ -34,6 +39,7 @@ resource "aws_iam_role" "iam_for_lambda_tf" {
 EOF
 }
 
+# Lambda
 resource "aws_lambda_function" "ping_pong" {
   s3_bucket     = aws_s3_bucket.zip_file_bucket.id
   s3_key        = aws_s3_bucket_object.object.key
@@ -50,60 +56,61 @@ resource "aws_lambda_function" "ping_pong" {
 
 }
 
-# resource "aws_apigatewayv2_api" "aws_api" {
-#   name          = "example-http-api"
-#   protocol_type = "HTTP"
-# }
-
-# resource "aws_apigatewayv2_integration" "sample" {
-#     api_id           = aws_apigatewayv2_api.aws_api.id
-#   integration_type = "AWS"
-
-#   connection_type           = "INTERNET"
-#   content_handling_strategy = "CONVERT_TO_TEXT"
-#   description               = "Ping Pong Function Integration"
-#   integration_method        = "GET"
-#   integration_uri           = aws_lambda_function.ping_pong.invoke_arn
-# #   passthrough_behavior      = "WHEN_NO_MATCH"
-# }
-
-# resource "aws_apigatewayv2_route" "api_route" {
-#     api_id = aws_apigatewayv2_api.aws_api.id
-#     route_key = 
-#     target = aws_apigatewayv2_integration.sample.id
-# }
-
 
 # API Gateway
 resource "aws_api_gateway_rest_api" "api" {
-  name = "myapi"
+  name        = "myapi"
   description = "Terraform Serverless Application Example"
 }
 
-resource "aws_api_gateway_resource" "resource" {
-  path_part   = "{resource+}"
+resource "aws_api_gateway_resource" "proxy" {
+  path_part   = "{proxy+}"
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
   rest_api_id = aws_api_gateway_rest_api.api.id
 }
 
 resource "aws_api_gateway_method" "method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_resource.resource.id
+  resource_id   = aws_api_gateway_resource.proxy.id
   http_method   = "ANY"
   authorization = "NONE"
 }
-resource "aws_api_gateway_integration" "integration" {
+resource "aws_api_gateway_integration" "lambda" {
   rest_api_id             = aws_api_gateway_rest_api.api.id
-  resource_id             = aws_api_gateway_resource.resource.id
+  resource_id             = aws_api_gateway_resource.proxy.id
   http_method             = aws_api_gateway_method.method.http_method
   integration_http_method = "GET"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.ping_pong.invoke_arn
 }
 
+resource "aws_api_gateway_method" "proxy_root" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_rest_api.api.root_resource_id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "lambda_root" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_method.proxy_root.resource_id
+  http_method = aws_api_gateway_method.proxy_root.http_method
+
+  integration_http_method = "GET"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.ping_pong.invoke_arn
+}
+
+resource "aws_api_gateway_deployment" "function_deployment" {
+  depends_on  = [aws_api_gateway_integration.lambda, aws_api_gateway_integration.lambda_root]
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name  = "test"
+}
+
+
 # Lambda
 resource "aws_lambda_permission" "apigw_lambda" {
-  statement_id  = "AllowExecutionFromAPIGateway"
+  statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.ping_pong.function_name
   principal     = "apigateway.amazonaws.com"
@@ -112,12 +119,9 @@ resource "aws_lambda_permission" "apigw_lambda" {
   source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
 
-resource "aws_api_gateway_deployment" "function_deployment" {
-  depends_on  = [aws_api_gateway_integration.integration]
-  rest_api_id = aws_api_gateway_rest_api.api.id
-}
+
 
 output "base_url" {
-    value = aws_api_gateway_deployment.function_deployment.invoke_url
-  
+  value = aws_api_gateway_deployment.function_deployment.invoke_url
+
 }
