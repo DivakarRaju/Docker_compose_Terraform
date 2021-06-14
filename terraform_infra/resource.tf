@@ -109,7 +109,6 @@ resource "null_resource" "api_access_url" {
     provisioner "local-exec" {
     command = <<EOT
     "echo ${var.host}/restapis/${aws_api_gateway_rest_api.api.id}/${aws_api_gateway_deployment.function_deployment.stage_name}/_user_request_/${aws_api_gateway_resource.proxy.path_part} >> function_url.txt"
-    "cat function_url.txt"
     EOT
   }
 
