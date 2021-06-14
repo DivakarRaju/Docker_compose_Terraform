@@ -61,10 +61,13 @@ resource "aws_lambda_function" "ping_pong" {
 resource "aws_api_gateway_rest_api" "api" {
   name        = "myapi"
   description = "Terraform Serverless Application Example"
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_resource" "proxy" {
-  path_part   = "{proxy+}"
+  path_part   = "proxy"
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
   rest_api_id = aws_api_gateway_rest_api.api.id
 }
@@ -72,37 +75,21 @@ resource "aws_api_gateway_resource" "proxy" {
 resource "aws_api_gateway_method" "method" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.proxy.id
-  http_method   = "ANY"
+  http_method   = "GET"
   authorization = "NONE"
 }
+
 resource "aws_api_gateway_integration" "lambda" {
   rest_api_id             = aws_api_gateway_rest_api.api.id
   resource_id             = aws_api_gateway_resource.proxy.id
   http_method             = aws_api_gateway_method.method.http_method
   integration_http_method = "GET"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.ping_pong.invoke_arn
-}
-
-resource "aws_api_gateway_method" "proxy_root" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  resource_id   = aws_api_gateway_rest_api.api.root_resource_id
-  http_method   = "ANY"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "lambda_root" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_method.proxy_root.resource_id
-  http_method = aws_api_gateway_method.proxy_root.http_method
-
-  integration_http_method = "GET"
-  type                    = "AWS_PROXY"
+  type                    = "AWS"
   uri                     = aws_lambda_function.ping_pong.invoke_arn
 }
 
 resource "aws_api_gateway_deployment" "function_deployment" {
-  depends_on  = [aws_api_gateway_integration.lambda, aws_api_gateway_integration.lambda_root]
+  depends_on  = [aws_api_gateway_integration.lambda]
   rest_api_id = aws_api_gateway_rest_api.api.id
   stage_name  = "test"
 }
@@ -114,14 +101,9 @@ resource "aws_lambda_permission" "apigw_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.ping_pong.function_name
   principal     = "apigateway.amazonaws.com"
-
-  # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
-  source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.api.execution_arn}/*/*/*"
 }
 
-
-
 output "base_url" {
-  value = aws_api_gateway_deployment.function_deployment.invoke_url
-
+  value = "${var.host}/restapis/${aws_api_gateway_rest_api.api.id}/${aws_api_gateway_deployment.function_deployment.stage_name}/_user_request_/${aws_api_gateway_resource.proxy.path_part}"
 }

@@ -1,4 +1,7 @@
 
 def ping_pong(event, context):
-    response = {"message" : "pong"}
+    response = {
+        "statusCode": 200,
+        "body": {"message": "pong"}
+    }
     return response
