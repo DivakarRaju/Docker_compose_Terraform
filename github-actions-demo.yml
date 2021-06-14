@@ -1,9 +1,0 @@
-name: Ping_Pong_Function_CI
-on: [push]
-jobs:
-  runjob:
-    runs-on: ubuntu-latest
-    steps:
-      -uses: actions/checkout@v1
-      
-
