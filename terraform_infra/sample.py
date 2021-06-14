@@ -1,4 +1,3 @@
-
 def ping_pong(event, context):
     response = {
         "statusCode": 200,

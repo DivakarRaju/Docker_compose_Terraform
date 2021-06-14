@@ -2,8 +2,8 @@
 
 data "archive_file" "ping_pong_file_archive" {
   type        = "zip"
-  source_file = "../function/sample.py"
-  output_path = "../function/sample.zip"
+  source_file = "./sample.py"
+  output_path = "./sample.zip"
 }
 
 #Creating a s3 bucket
