@@ -32,7 +32,7 @@ jobs:
         run: docker-compose run terraform apply --auto-approve
 
       - name: Invoke ping pong function
-        run: curl terraform_infra/function_url.txt
+        run: curl $(cat terraform_infra/function_url.txt)
 
       - name: Stops localstack service
         run: docker-compose down
