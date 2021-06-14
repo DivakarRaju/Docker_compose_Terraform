@@ -29,7 +29,7 @@ jobs:
         run: docker-compose run terraform apply --auto-approve
 
       - name: checks if the service are up
-        run: docker run --network container:localstack appropriate/curl -s --retry 10 --retry-connrefused http://localhost:4566/
+        run: curl http://localhost:4566/
 
       - name: Stops localstack service
         run: docker-compose down
