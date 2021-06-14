@@ -16,16 +16,16 @@ jobs:
       - name: Starting localstack service
         run: docker-compose up -d localstack
 
-      - name: Run a multi-line script
+      - name: terraform init
         run: docker-compose run terraform init
         
-      - name: Run a multi-line script
+      - name: terraform validate
         run: docker-compose run terraform validate
         
-      - name: Run a multi-line script
+      - name: terraform plan
         run: docker-compose run terraform plan
         
-      - name: Run a multi-line script
+      - name: terraform apply
         run: docker-compose run terraform apply --auto-approve
 
       - name: checks if the service are up
