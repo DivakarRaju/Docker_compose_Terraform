@@ -16,9 +16,6 @@ jobs:
       - name: Starting localstack service
         run: docker-compose up -d localstack
 
-      - name: checks if the localstack is running
-        run: curl http://localhost:4566/health
-
       - name: terraform init
         run: docker-compose run terraform init
         
@@ -27,6 +24,9 @@ jobs:
         
       - name: terraform plan
         run: docker-compose run terraform plan
+
+      - name: checks if the localstack is running
+        run: curl http://localhost:4566/health
         
       - name: terraform apply
         run: docker-compose run terraform apply --auto-approve
