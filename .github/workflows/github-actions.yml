@@ -31,6 +31,9 @@ jobs:
       - name: terraform apply
         run: docker-compose run terraform apply --auto-approve
 
+      - name: Invoke ping pong function
+        run: curl terraform_infra/function_url.txt
+
       - name: Stops localstack service
         run: docker-compose down
 
