@@ -28,7 +28,7 @@ jobs:
       - name: terraform plan
         run: docker-compose run terraform plan
 
-      # prints the localstack service running status status
+      # prints the localstack service running status
       - name: checks if the localstack is running
         run: curl http://localhost:4566/health
 
