@@ -1,41 +1,46 @@
-# This is a basic workflow to help you get started with Actions
-
+# This is CI github workflow. Will build on every commit-push changes
 name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   ping_pong_function:
     runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checks-out your repository under $GITHUB_WORKSPACE
       - uses: actions/checkout@v2
 
+      # Starts the localstack service container
       - name: Starting localstack service
         run: docker-compose up -d localstack
 
+      # Runs terrafrom init - initializes the terraform plugins
       - name: terraform init
         run: docker-compose run terraform init
-        
+
+      # Runs terrafrom validate - validates the configuration files in the directory 
       - name: terraform validate
         run: docker-compose run terraform validate
-        
+
+      # Runs terrafrom plan - creates an execution plan of the infrastrucure
       - name: terraform plan
         run: docker-compose run terraform plan
 
+      # prints the localstack service running status status
       - name: checks if the localstack is running
         run: curl http://localhost:4566/health
-        
+
+      # Runs terrafrom apply - will executed the actions proposed in terrafrom plan.
+      # Creates the Infrastracture 
       - name: terraform apply
         run: docker-compose run terraform apply --auto-approve
 
+      # Invokes the ping pong function api and prints the response
       - name: Invoke ping pong function
         run: curl $(cat terraform_infra/function_url.txt)
 
+      # Stops localstack service container
       - name: Stops localstack service
         run: docker-compose down
-
-
-
