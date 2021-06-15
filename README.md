@@ -30,6 +30,3 @@ This project builds Rest Api Gateway for invoking lambda function in [localstack
  7.  Stops localstack service container
       > `docker-compose down`
 
-
-## GitHubActions
-  > Check GitHubActions run [here](https://github.com/DivakarRaju/Docker_compose_Terraform/actions/workflows/github-actions.yml)
